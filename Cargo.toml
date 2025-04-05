@@ -2,7 +2,7 @@
 name = "cnxt"
 description = "Coloring made simple, for your terminal."
 keywords = ["terminal", "color", "ansi"]
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 authors = ["Lance <me@lance.fun>", "Thomas Wickham <mackwic@gmail.com>"]
 license = "MPL-2.0"
