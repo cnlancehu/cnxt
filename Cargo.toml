@@ -2,7 +2,7 @@
 name = "cnxt"
 description = "Coloring made simple, for your terminal."
 keywords = ["terminal", "color", "ansi"]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["Lance <me@lance.fun>", "Thomas Wickham <mackwic@gmail.com>"]
 license = "MPL-2.0"
@@ -15,11 +15,11 @@ exclude = [
 ]
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0", features = [
+windows-sys = { version = "0.59.0", features = [
     "Win32_Foundation",
     "Win32_System_Console",
 ] }
-windows-version = "0"
+windows-version = "0.1.4"
 
 [dev-dependencies]
 anyhow = "1"
