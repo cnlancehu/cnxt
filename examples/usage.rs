@@ -2,7 +2,8 @@ use cnxt::Colorize as _;
 
 fn main() {
     #[cfg(windows)]
-    let _ = cnxt::control::set_virtual_terminal(true);
+    cnxt::control::set_virtual_terminal(true);
+
     let print_src = |s: &str| {
         println!(
             "\n{}{}{}",

@@ -7,6 +7,12 @@ edition = "2024"
 authors = ["Lance <me@lance.fun>", "Thomas Wickham <mackwic@gmail.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/cnlancehu/cnxt"
+documentation = "https://docs.rs/cnxt"
+exclude = [
+    "assets/banner-cli.gif",
+    "assets/usage.png",
+    "assets/set_virtual_terminal_comparison.png",
+]
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0", features = [

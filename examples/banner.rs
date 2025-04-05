@@ -7,7 +7,7 @@ use image::{
 
 fn main() {
     #[cfg(windows)]
-    let _ = cnxt::control::set_virtual_terminal(true);
+    cnxt::control::set_virtual_terminal(true);
 
     let buffer = include_bytes!("../assets/banner.png");
     let lines = img2lines(buffer).unwrap();
