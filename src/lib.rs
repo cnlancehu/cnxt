@@ -285,6 +285,28 @@ pub trait Colorize {
     {
         self.color(Color::TrueColor { r, g, b })
     }
+    /// The following `#` prefix is optional.
+    ///
+    /// This function will **panic** if the hex string is invalid.
+    ///
+    /// Use [`Self::try_hexcolor`] for a non-panicking alternative.
+    fn hexcolor<S>(self, hex: S) -> ColoredString
+    where
+        Self: Sized,
+        S: AsRef<str>,
+    {
+        self.color(parse_hex(hex.as_ref()).unwrap())
+    }
+    /// The following `#` prefix is optional.
+    ///
+    /// This function will return `None` if the hex string is invalid
+    fn try_hexcolor<S>(self, hex: S) -> Option<ColoredString>
+    where
+        Self: Sized,
+        S: AsRef<str>,
+    {
+        parse_hex(hex.as_ref()).map(|color| self.color(color))
+    }
     fn custom_color<T>(self, color: T) -> ColoredString
     where
         Self: Sized,
@@ -419,6 +441,28 @@ pub trait Colorize {
         Self: Sized,
     {
         self.on_color(Color::TrueColor { r, g, b })
+    }
+    /// The following `#` prefix is optional.
+    ///
+    /// This function will **panic** if the hex string is invalid.
+    ///
+    /// Use [`Self::try_on_hexcolor`] for a non-panicking alternative.
+    fn on_hexcolor<S>(self, hex: S) -> ColoredString
+    where
+        Self: Sized,
+        S: AsRef<str>,
+    {
+        self.on_color(parse_hex(hex.as_ref()).unwrap())
+    }
+    /// The following `#` prefix is optional.
+    ///
+    /// This function will return `None` if the hex string is invalid
+    fn try_on_hexcolor<S>(self, hex: S) -> Option<ColoredString>
+    where
+        Self: Sized,
+        S: AsRef<str>,
+    {
+        parse_hex(hex.as_ref()).map(|color| self.on_color(color))
     }
     fn on_custom_color<T>(self, color: T) -> ColoredString
     where
@@ -705,5 +749,31 @@ impl fmt::Display for ColoredString {
         write!(f, "{}", escaped_input)?;
         f.write_str("\x1B[0m")?;
         Ok(())
+    }
+}
+
+fn parse_hex(s: &str) -> Option<Color> {
+    // Remove leading # if present
+    let s = s.strip_prefix('#').unwrap_or(s);
+
+    match s.len() {
+        6 => {
+            let r = u8::from_str_radix(&s[0..2], 16).ok()?;
+            let g = u8::from_str_radix(&s[2..4], 16).ok()?;
+            let b = u8::from_str_radix(&s[4..6], 16).ok()?;
+            Some(Color::TrueColor { r, g, b })
+        }
+        3 => {
+            // Convert hex shorthand (e.g. "f09") to full form by duplicating each digit
+            let r = u8::from_str_radix(&s[0..1], 16).ok()?;
+            let g = u8::from_str_radix(&s[1..2], 16).ok()?;
+            let b = u8::from_str_radix(&s[2..3], 16).ok()?;
+            Some(Color::TrueColor {
+                r: r * 17, // Same as (r << 4) | r but more readable
+                g: g * 17,
+                b: b * 17,
+            })
+        }
+        _ => None,
     }
 }
