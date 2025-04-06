@@ -8,13 +8,19 @@
 
 A fork of [colored](https://github.com/colored-rs/colored) which introduces better functionalities.
 
+Why CNXT?
+
+1. **Enhanced Performance**: Uses `Cow` to minimize allocations [(Inspired by this PR)](https://github.com/colored-rs/colored/pull/135)
+2. **Streamlined Codebase**: Removed outdated and redundant code
+3. **Superior Terminal Support**: Improved detection and handling of terminal capabilities
+
 ## Usage
 Coloring your terminal made simple. You already know how to do it.
 
-### Basic
 ![usage](./assets/usage.png)
 
-### Advanced
+Small tips
+
 1. For **Windows targets**, add this to enable colors in **Windows CMD**:
     ```rust
     #[cfg(windows)]
@@ -63,3 +69,6 @@ Coloring your terminal made simple. You already know how to do it.
     # or
     let ansi256_color = color.fallback_to_ansi256();
     ```
+
+## License
+As a fork of [colored](https://github.com/colored-rs/colored), CNXT maintains the same [MPL-2.0](https://github.com/colored-rs/colored?tab=readme-ov-file#license) license as the original repository.

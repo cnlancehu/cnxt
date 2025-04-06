@@ -3,13 +3,19 @@
 //!
 //! A fork of [colored](https://github.com/colored-rs/colored) which introduces better functionalities.
 //!
+//! Why CNXT?
+//!
+//! 1. **Enhanced Performance**: Uses `Cow` to minimize allocations [(Inspired by this PR)](https://github.com/colored-rs/colored/pull/135)
+//! 2. **Streamlined Codebase**: Removed outdated and redundant code
+//! 3. **Superior Terminal Support**: Improved detection and handling of terminal capabilities
+//!
 //! ## Usage
 //! Coloring your terminal made simple. You already know how to do it.
 //!
-//! ### Basic
 //! ![usage](https://github.com/cnlancehu/cnxt/blob/master/assets/usage.png?raw=true)
 //!
-//! ### Advanced
+//! Small tips
+//!
 //! 1. For **Windows targets**, add this to enable colors in **Windows CMD**:
 //!     ```rust
 //!     #[cfg(windows)]
