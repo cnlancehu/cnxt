@@ -12,7 +12,11 @@ fn main() {
             r#");"#
         );
     };
-    println!("\n> {}{}", r#"use cnxt::Colorize as _;"#.bright_magenta()," # Remember to add this".bright_black());
+    println!(
+        "\n> {}{}",
+        r#"use cnxt::Colorize as _;"#.bright_magenta(),
+        " # Remember to add this".bright_black()
+    );
 
     print_src(r#""Cyan color".cyan()"#);
     println!("  {}", "Cyan color".cyan());

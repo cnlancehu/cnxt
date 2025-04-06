@@ -53,6 +53,72 @@ macro_rules! impl_assign_op_trait {
     };
 }
 
+macro_rules! impl_binary_op_for_styles {
+    (impl $trait_name:ident, $method:ident, $op:tt for Styles) => {
+        impl $trait_name<Self> for Styles {
+            type Output = Style;
+
+            #[inline]
+            fn $method(self, rhs: Self) -> Self::Output {
+                Style(self.to_u8() $op rhs.to_u8())
+            }
+        }
+
+        auto_impl_ref_binop_trait!(impl $trait_name, $method for Styles, Styles);
+
+        impl $trait_name<Style> for Styles {
+            type Output = Style;
+
+            #[inline]
+            fn $method(self, rhs: Style) -> Self::Output {
+                Style(self.to_u8() $op rhs.0)
+            }
+        }
+
+        auto_impl_ref_binop_trait!(impl $trait_name, $method for Styles, Style);
+    };
+}
+
+macro_rules! impl_binary_op_for_style {
+    (impl $trait_name:ident, $method:ident, $op:tt for Style) => {
+        impl $trait_name<Self> for Style {
+            type Output = Self;
+
+            #[inline]
+            fn $method(self, rhs: Self) -> Self::Output {
+                Self(self.0 $op rhs.0)
+            }
+        }
+
+        auto_impl_ref_binop_trait!(impl $trait_name, $method for Style, Style);
+
+        impl $trait_name<Styles> for Style {
+            type Output = Self;
+
+            #[inline]
+            fn $method(self, rhs: Styles) -> Self::Output {
+                Self(self.0 $op rhs.to_u8())
+            }
+        }
+
+        auto_impl_ref_binop_trait!(impl $trait_name, $method for Style, Styles);
+    };
+}
+
+macro_rules! impl_style_method {
+    ($name:ident, $style:ident) => {
+        /// Enables the specified style attribute for this Style.
+        ///
+        /// Returns the modified Style for chaining.
+        #[must_use]
+        #[inline]
+        pub fn $name(mut self) -> Self {
+            self.add(Styles::$style);
+            self
+        }
+    };
+}
+
 const CLEARV: u8 = 0b0000_0000;
 const BOLD: u8 = 0b0000_0001;
 const UNDERLINE: u8 = 0b0000_0010;
@@ -76,122 +142,70 @@ static STYLES: [(u8, Styles); 8] = [
 
 pub static CLEAR: Style = Style(CLEARV);
 
-/// A combinatorial style such as bold, italics, dimmed, etc.
+/// A combinatorial style representation for text formatting (bold, italic, etc.)
 ///
-/// ## Creation
+/// # Usage Examples
 ///
-/// `Style::default()` returns a `Style` with no style switches
-/// activated and is the default method of creating a plain `Style`.
+/// ## Creating Styles
 ///
-/// ## `Style` from a set of `Styles`s / `Styles` iterator
+/// - Default (no styles): `Style::default()`
+/// - From individual style: `Style::from(Styles::Bold)`
+/// - Builder pattern: `Style::default().bold().italic()`
+/// - From multiple styles: `Style::from_iter([Styles::Bold, Styles::Italic])`
 ///
-/// `Style` implements `FromIter<Styles>` which means that it is
-/// possible to do the following:
+/// ## Combining Styles with Operators
 ///
 /// ```rust
-/// # use cnxt::*;
-/// let style =
-///     Style::from_iter([Styles::Bold, Styles::Italic, Styles::Strikethrough]);
-/// for styles in [Styles::Bold, Styles::Italic, Styles::Strikethrough] {
-///     assert!(style.contains(styles));
-/// }
+/// use cnxt::*;
+///
+/// // Combine styles with the | operator
+/// let header_style = Style::from(Styles::Bold) | Styles::Underline;
+///
+/// // Remove styles with & and ! operators
+/// let mut styles = Style::default().bold().italic().underline();
+/// styles &= !Style::from(Styles::Italic); // Remove italic
+///
+/// assert!(styles.contains(Styles::Bold));
+/// assert!(styles.contains(Styles::Underline));
+/// assert!(!styles.contains(Styles::Italic));
 /// ```
 ///
-/// As you can see, this is a good thing to keep in mind, although for
-/// most cases, where you're not setting styles dynamically and are
-/// simply creating a pre-defined set of styles, using [`Default`] and
-/// then using the builder-style methods is likely prettier.
+/// ## Adding and Removing Styles
 ///
 /// ```rust
-/// # use cnxt::*;
-/// let many_styles = Style::default().bold().underline().italic().blink();
-/// ```
+/// use cnxt::*;
 ///
-/// ## Implementation of logical bitwise operators
+/// let mut style = Style::default().bold();
+/// style.add(Styles::Underline); // Add a style
+/// style.remove(Styles::Bold); // Remove a style
 ///
-/// `Style` implements bitwise logical operations that operate on
-/// the held style switches collectively. By far the most common
-/// and useful is the bitwise 'or' operator `|` which combines two
-/// styles, merging their combined styles into one. Example:
-///
-/// ```rust
-/// # use cnxt::*;
-/// let only_bold = Style::from(Styles::Bold);
-/// // This line is actually an example of `Styles`'s bitwise logic impls but still.
-/// let underline_and_italic = Styles::Underline | Styles::Italic;
-/// let all_three = only_bold | underline_and_italic;
-///
-/// assert!(all_three.contains(Styles::Bold)
-///     && all_three.contains(Styles::Underline)
-///     && all_three.contains(Styles::Italic));
-/// ```
-///
-/// This functionality also allows for easily turning off styles
-/// of one `Styles` using another by combining the `&` and `!`
-/// operators.
-///
-/// ```rust
-/// # use cnxt::*;
-/// let mut very_loud_style = Style::default()
-///     .bold()
-///     .underline()
-///     .italic()
-///     .strikethrough()
-///     .hidden();
-///
-/// // Oops! Some of those should not be in there!
-/// // This Style now has all styles _except_ the two we don't want
-/// // (hidden and strikethough).
-/// let remove_mask =
-///     !Style::from_iter([Styles::Hidden, Styles::Strikethrough]);
-/// very_loud_style &= remove_mask;
-///
-/// // `very_loud_style` no longer contains the undesired style
-/// // switches...
-/// assert!(
-///     !very_loud_style.contains(Styles::Hidden)
-///         && !very_loud_style.contains(Styles::Strikethrough)
-/// );
-/// // ...but it retains everything else!
-/// assert!(very_loud_style.contains(Styles::Bold));
+/// assert!(!style.contains(Styles::Bold));
+/// assert!(style.contains(Styles::Underline));
 /// ```
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Style(u8);
 
-/// Enum containing all of the available style settings that can be
-/// applied to a [`Styles`] and by extension, a colrized type.
+/// Individual style flags that can be applied to text.
 ///
-/// ## Implementation of bitwise logical operators
+/// # Bitwise Operations
 ///
-/// The implementations of [`BitAnd`], [`BitOr`], [`BitXor`], and
-/// [`Not`] are really extensions of [`Style`]'s implementations of
-/// the same. [`BitOr`] is great for starting chains of `Styles`'s
-/// for creating [`Style`]'s.
+/// - Combine styles: `Styles::Bold | Styles::Italic` → returns a `Style`
+/// - Invert a style: `!Styles::Bold` → returns a `Style` with all styles except Bold
+/// - Combine with existing Style: `existingStyle | Styles::Underline`
 ///
-/// ```
-/// # use cnxt::*;
-/// let my_styles =
-///     // BitOr<Styles> for Styles (Styles | Styles) = Style
-///     Styles::Bold | Styles::Underline
-///     // BitOr<Styles> for Style (Style | Styles) = Style
-///     | Styles::Italic;
+/// # Example
 ///
-/// for s in [Styles::Bold, Styles::Underline, Styles::Italic] {
-///     assert!(my_styles.contains(s));
-/// }
-/// ```
+/// ```rust
+/// use cnxt::*;
 ///
-/// [`Not`] has far fewer use cases but can still find use in
-/// turning a `Styles` into a [`Style`] with all styles activated
-/// except that `Styles`.
+/// // Create a Style with multiple attributes
+/// let style = Styles::Bold | Styles::Underline;
+/// assert!(style.contains(Styles::Bold));
 ///
-/// ```
-/// # use cnxt::*;
-/// let everything_but_bold = !Styles::Bold;
-///
-/// assert!(everything_but_bold.contains(Styles::Underline));
-/// assert!(everything_but_bold.contains(Styles::Strikethrough));
-/// assert!(!everything_but_bold.contains(Styles::Bold));
+/// // Create a Style with everything but Bold
+/// let not_bold = !Styles::Bold;
+/// assert!(!not_bold.contains(Styles::Bold));
+/// assert!(not_bold.contains(Styles::Underline));
 /// ```
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 #[allow(missing_docs)]
@@ -208,6 +222,7 @@ pub enum Styles {
 }
 
 impl Styles {
+    #[inline]
     fn to_str<'a>(self) -> &'a str {
         match self {
             Self::Clear => "", // unreachable, but we don't want to panic
@@ -222,7 +237,8 @@ impl Styles {
         }
     }
 
-    fn to_u8(self) -> u8 {
+    #[inline]
+    const fn to_u8(self) -> u8 {
         match self {
             Self::Clear => CLEARV,
             Self::Bold => BOLD,
@@ -241,78 +257,24 @@ impl Styles {
             return None;
         }
 
-        let res: Vec<Self> = STYLES
+        let res = STYLES
             .iter()
-            .filter(|&(mask, _)| (0 != (u & mask)))
-            .map(|&(_, value)| value)
-            .collect();
-        if res.is_empty() { None } else { Some(res) }
+            .filter_map(|&(mask, value)| (u & mask != 0).then_some(value))
+            .collect::<Vec<_>>();
+
+        (!res.is_empty()).then_some(res)
     }
 }
 
-impl BitAnd<Self> for Styles {
-    type Output = Style;
-
-    fn bitand(self, rhs: Self) -> Self::Output {
-        Style(self.to_u8() & rhs.to_u8())
-    }
-}
-
-auto_impl_ref_binop_trait!(impl BitAnd, bitand for Styles, Styles);
-
-impl BitAnd<Style> for Styles {
-    type Output = Style;
-
-    fn bitand(self, rhs: Style) -> Self::Output {
-        Style(self.to_u8() & rhs.0)
-    }
-}
-
-auto_impl_ref_binop_trait!(impl BitAnd, bitand for Styles, Style);
-
-impl BitOr<Self> for Styles {
-    type Output = Style;
-
-    fn bitor(self, rhs: Self) -> Self::Output {
-        Style(self.to_u8() | rhs.to_u8())
-    }
-}
-
-auto_impl_ref_binop_trait!(impl BitOr, bitor for Styles, Styles);
-
-impl BitOr<Style> for Styles {
-    type Output = Style;
-
-    fn bitor(self, rhs: Style) -> Self::Output {
-        Style(self.to_u8() | rhs.0)
-    }
-}
-
-auto_impl_ref_binop_trait!(impl BitOr, bitor for Styles, Style);
-
-impl BitXor<Self> for Styles {
-    type Output = Style;
-
-    fn bitxor(self, rhs: Self) -> Self::Output {
-        Style(self.to_u8() ^ rhs.to_u8())
-    }
-}
-
-auto_impl_ref_binop_trait!(impl BitXor, bitxor for Styles, Styles);
-
-impl BitXor<Style> for Styles {
-    type Output = Style;
-
-    fn bitxor(self, rhs: Style) -> Self::Output {
-        Style(self.to_u8() ^ rhs.0)
-    }
-}
-
-auto_impl_ref_binop_trait!(impl BitXor, bitxor for Styles, Style);
+// Using our binary operation macros for Styles
+impl_binary_op_for_styles!(impl BitAnd, bitand, & for Styles);
+impl_binary_op_for_styles!(impl BitOr, bitor, | for Styles);
+impl_binary_op_for_styles!(impl BitXor, bitxor, ^ for Styles);
 
 impl Not for Styles {
     type Output = Style;
 
+    #[inline]
     fn not(self) -> Self::Output {
         Style(!self.to_u8())
     }
@@ -321,191 +283,90 @@ impl Not for Styles {
 impl Not for &Styles {
     type Output = Style;
 
+    #[inline]
     fn not(self) -> Self::Output {
         Style(!self.to_u8())
     }
 }
 
 impl Style {
-    /// Check if the current style has one of [`Styles`](Styles) switched on.
+    /// Checks if this Style has a specific style flag enabled.
+    ///
+    /// ### Example
     ///
     /// ```rust
-    /// # use cnxt::*;
-    /// let colored = "".bold().italic();
-    /// assert_eq!(colored.style.contains(Styles::Bold), true);
-    /// assert_eq!(colored.style.contains(Styles::Italic), true);
-    /// assert_eq!(colored.style.contains(Styles::Dimmed), false);
+    /// let style = Style::default().bold().italic();
+    /// assert!(style.contains(Styles::Bold));
+    /// assert!(!style.contains(Styles::Underline));
     /// ```
     #[must_use]
+    #[inline]
     pub fn contains(self, style: Styles) -> bool {
         let s = style.to_u8();
         self.0 & s == s
     }
 
+    #[inline]
     pub(crate) fn to_str(self) -> String {
-        let styles = Styles::from_u8(self.0).unwrap_or_default();
-        styles
-            .iter()
-            .map(|s| s.to_str())
-            .collect::<Vec<&str>>()
-            .join(";")
+        match Styles::from_u8(self.0) {
+            Some(styles) => styles
+                .iter()
+                .map(|s| s.to_str())
+                .collect::<Vec<&str>>()
+                .join(";"),
+            None => String::new(),
+        }
     }
 
-    /// Adds the `two` style switch to this Style.
+    /// Adds a style flag to this Style.
+    ///
+    /// ### Example
     ///
     /// ```rust
-    /// # use cnxt::*;
-    /// let cstr = "".red().bold();
-    /// let mut style = cstr.style;
-    /// style.add(Styles::Italic);
-    /// let mut cstr2 = "".blue();
-    /// cstr2.style = style;
-    ///
-    /// assert!(cstr2.style.contains(Styles::Bold));
-    /// assert!(cstr2.style.contains(Styles::Italic));
-    /// assert_eq!(cstr2.fgcolor, Some(Color::Blue));
+    /// let mut style = Style::default();
+    /// style.add(Styles::Bold);
+    /// assert!(style.contains(Styles::Bold));
     /// ```
-    pub fn add(&mut self, two: Styles) {
-        self.0 |= two.to_u8();
+    #[inline]
+    pub fn add(&mut self, style: Styles) {
+        self.0 |= style.to_u8();
     }
 
-    /// Turns off a style switch.
+    /// Removes a style flag from this Style.
+    ///
+    /// ### Example
     ///
     /// ```rust
-    /// use cnxt::*;
-    /// let cstr = "".red().bold().italic();
-    /// let mut style = cstr.style;
-    /// style.remove(Styles::Italic);
-    /// let mut cstr2 = "".blue();
-    /// cstr2.style = style;
-    /// assert!(cstr2.style.contains(Styles::Bold));
-    /// assert!(!cstr2.style.contains(Styles::Italic));
-    /// assert_eq!(cstr2.fgcolor, Some(Color::Blue));
+    /// let mut style = Style::default().bold().italic();
+    /// style.remove(Styles::Bold);
+    /// assert!(!style.contains(Styles::Bold));
+    /// assert!(style.contains(Styles::Italic));
     /// ```
-    pub fn remove(&mut self, two: Styles) {
-        self.0 &= !two.to_u8();
+    #[inline]
+    pub fn remove(&mut self, style: Styles) {
+        self.0 &= !style.to_u8();
     }
 
-    /// Makes this `Style` include Bold.
-    #[must_use]
-    pub fn bold(mut self) -> Self {
-        self.add(Styles::Bold);
-        self
-    }
-
-    /// Makes this `Style` include Dimmed.
-    #[must_use]
-    pub fn dimmed(mut self) -> Self {
-        self.add(Styles::Dimmed);
-        self
-    }
-
-    /// Makes this `Style` include Underline.
-    #[must_use]
-    pub fn underline(mut self) -> Self {
-        self.add(Styles::Underline);
-        self
-    }
-
-    /// Makes this `Style` include Reversed.
-    #[must_use]
-    pub fn reversed(mut self) -> Self {
-        self.add(Styles::Reversed);
-        self
-    }
-
-    /// Makes this `Style` include Italic.
-    #[must_use]
-    pub fn italic(mut self) -> Self {
-        self.add(Styles::Italic);
-        self
-    }
-
-    /// Makes this `Style` include Blink.
-    #[must_use]
-    pub fn blink(mut self) -> Self {
-        self.add(Styles::Blink);
-        self
-    }
-
-    /// Makes this `Style` include Hidden.
-    #[must_use]
-    pub fn hidden(mut self) -> Self {
-        self.add(Styles::Hidden);
-        self
-    }
-
-    /// Makes this `Style` include Strikethrough.
-    #[must_use]
-    pub fn strikethrough(mut self) -> Self {
-        self.add(Styles::Strikethrough);
-        self
-    }
+    // Using our style method macro for all style methods
+    impl_style_method!(bold, Bold);
+    impl_style_method!(dimmed, Dimmed);
+    impl_style_method!(underline, Underline);
+    impl_style_method!(reversed, Reversed);
+    impl_style_method!(italic, Italic);
+    impl_style_method!(blink, Blink);
+    impl_style_method!(hidden, Hidden);
+    impl_style_method!(strikethrough, Strikethrough);
 }
 
-impl BitAnd<Self> for Style {
-    type Output = Self;
-
-    fn bitand(self, rhs: Self) -> Self::Output {
-        Self(self.0 & rhs.0)
-    }
-}
-
-auto_impl_ref_binop_trait!(impl BitAnd, bitand for Style, Style);
-
-impl BitAnd<Styles> for Style {
-    type Output = Self;
-
-    fn bitand(self, rhs: Styles) -> Self::Output {
-        Self(self.0 & rhs.to_u8())
-    }
-}
-
-auto_impl_ref_binop_trait!(impl BitAnd, bitand for Style, Styles);
-
-impl BitOr<Self> for Style {
-    type Output = Self;
-
-    fn bitor(self, rhs: Self) -> Self::Output {
-        Self(self.0 | rhs.0)
-    }
-}
-
-auto_impl_ref_binop_trait!(impl BitOr, bitor for Style, Style);
-
-impl BitOr<Styles> for Style {
-    type Output = Self;
-
-    fn bitor(self, rhs: Styles) -> Self::Output {
-        Self(self.0 | rhs.to_u8())
-    }
-}
-
-auto_impl_ref_binop_trait!(impl BitOr, bitor for Style, Styles);
-
-impl BitXor<Self> for Style {
-    type Output = Self;
-
-    fn bitxor(self, rhs: Self) -> Self::Output {
-        Self(self.0 ^ rhs.0)
-    }
-}
-
-auto_impl_ref_binop_trait!(impl BitXor, bitxor for Style, Style);
-
-impl BitXor<Styles> for Style {
-    type Output = Self;
-
-    fn bitxor(self, rhs: Styles) -> Self::Output {
-        Self(self.0 ^ rhs.to_u8())
-    }
-}
-
-auto_impl_ref_binop_trait!(impl BitXor, bitxor for Style, Styles);
+// Using our binary operation macros for Style
+impl_binary_op_for_style!(impl BitAnd, bitand, & for Style);
+impl_binary_op_for_style!(impl BitOr, bitor, | for Style);
+impl_binary_op_for_style!(impl BitXor, bitxor, ^ for Style);
 
 impl Not for Style {
     type Output = Self;
 
+    #[inline]
     fn not(self) -> Self::Output {
         Self(!self.0)
     }
@@ -514,21 +375,17 @@ impl Not for Style {
 impl Not for &Style {
     type Output = Style;
 
+    #[inline]
     fn not(self) -> Self::Output {
         Style(!self.0)
     }
 }
 
 impl_assign_op_trait!(BitAndAssign, bitand_assign for Style, Style, using BitAnd::bitand);
-
 impl_assign_op_trait!(BitAndAssign, bitand_assign for Style, Styles, using BitAnd::bitand);
-
 impl_assign_op_trait!(BitOrAssign, bitor_assign for Style, Style, using BitOr::bitor);
-
 impl_assign_op_trait!(BitOrAssign, bitor_assign for Style, Styles, using BitOr::bitor);
-
 impl_assign_op_trait!(BitXorAssign, bitxor_assign for Style, Style, using BitXor::bitxor);
-
 impl_assign_op_trait!(BitXorAssign, bitxor_assign for Style, Styles, using BitXor::bitxor);
 
 impl Default for Style {
@@ -538,12 +395,14 @@ impl Default for Style {
 }
 
 impl From<Styles> for Style {
+    #[inline]
     fn from(value: Styles) -> Self {
         Self(value.to_u8())
     }
 }
 
 impl From<&Styles> for Style {
+    #[inline]
     fn from(value: &Styles) -> Self {
         Self(value.to_u8())
     }
