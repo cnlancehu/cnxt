@@ -145,9 +145,9 @@ pub use style::{Style, Styles};
 /// Notice how this process preserves the coloring and style.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 #[non_exhaustive]
-pub struct ColoredString {
+pub struct ColoredString<'a> {
     /// The plain text that will have color and style applied to it.
-    pub input: Cow<'static, str>,
+    pub input: Cow<'a, str>,
     /// The color of the text as it will be printed.
     pub fgcolor: Option<Color>,
     /// The background color (if any). None means that the text will be printed
@@ -162,7 +162,7 @@ pub struct ColoredString {
 macro_rules! impl_basic_fg_colors {
         ($(($method:ident, $color:ident)),*) => {
             $(
-                fn $method(self) -> ColoredString
+                fn $method(self) -> ColoredString<'a>
                 where
                     Self: Sized,
                 {
@@ -175,7 +175,7 @@ macro_rules! impl_basic_fg_colors {
 macro_rules! impl_basic_bg_colors {
         ($(($method:ident, $color:ident)),*) => {
             $(
-                fn $method(self) -> ColoredString
+                fn $method(self) -> ColoredString<'a>
                 where
                     Self: Sized,
                 {
@@ -190,7 +190,7 @@ macro_rules! impl_basic_bg_colors {
 /// You can use `colored` effectively simply by importing this trait
 /// and then using its methods on `String` and `&str`.
 #[allow(missing_docs)]
-pub trait Colorize {
+pub trait Colorize<'a> {
     // Generate standard foreground colors
     impl_basic_fg_colors! {
         (black, Black),
@@ -212,13 +212,13 @@ pub trait Colorize {
         (bright_cyan, BrightCyan),
         (bright_white, BrightWhite)
     }
-    fn ansi256color(self, idx: u8) -> ColoredString
+    fn ansi256color(self, idx: u8) -> ColoredString<'a>
     where
         Self: Sized,
     {
         self.color(Color::Ansi256 { idx })
     }
-    fn truecolor(self, r: u8, g: u8, b: u8) -> ColoredString
+    fn truecolor(self, r: u8, g: u8, b: u8) -> ColoredString<'a>
     where
         Self: Sized,
     {
@@ -229,7 +229,7 @@ pub trait Colorize {
     /// This function will **panic** if the hex string is invalid.
     ///
     /// Use [`Self::try_hexcolor`] for a non-panicking alternative.
-    fn hexcolor<S>(self, hex: S) -> ColoredString
+    fn hexcolor<S>(self, hex: S) -> ColoredString<'a>
     where
         Self: Sized,
         S: AsRef<str>,
@@ -239,14 +239,14 @@ pub trait Colorize {
     /// The following `#` prefix is optional.
     ///
     /// This function will return `None` if the hex string is invalid
-    fn try_hexcolor<S>(self, hex: S) -> Option<ColoredString>
+    fn try_hexcolor<S>(self, hex: S) -> Option<ColoredString<'a>>
     where
         Self: Sized,
         S: AsRef<str>,
     {
         parse_hex(hex.as_ref()).map(|color| self.color(color))
     }
-    fn custom_color<T>(self, color: T) -> ColoredString
+    fn custom_color<T>(self, color: T) -> ColoredString<'a>
     where
         Self: Sized,
         T: Into<CustomColor>,
@@ -259,7 +259,7 @@ pub trait Colorize {
             b: color.b,
         })
     }
-    fn color<S: Into<Color>>(self, color: S) -> ColoredString;
+    fn color<S: Into<Color>>(self, color: S) -> ColoredString<'a>;
 
     // Generate background colors
     impl_basic_bg_colors! {
@@ -282,13 +282,13 @@ pub trait Colorize {
         (on_bright_cyan, BrightCyan),
         (on_bright_white, BrightWhite)
     }
-    fn on_ansi256color(self, idx: u8) -> ColoredString
+    fn on_ansi256color(self, idx: u8) -> ColoredString<'a>
     where
         Self: Sized,
     {
         self.on_color(Color::Ansi256 { idx })
     }
-    fn on_truecolor(self, r: u8, g: u8, b: u8) -> ColoredString
+    fn on_truecolor(self, r: u8, g: u8, b: u8) -> ColoredString<'a>
     where
         Self: Sized,
     {
@@ -299,7 +299,7 @@ pub trait Colorize {
     /// This function will **panic** if the hex string is invalid.
     ///
     /// Use [`Self::try_on_hexcolor`] for a non-panicking alternative.
-    fn on_hexcolor<S>(self, hex: S) -> ColoredString
+    fn on_hexcolor<S>(self, hex: S) -> ColoredString<'a>
     where
         Self: Sized,
         S: AsRef<str>,
@@ -309,14 +309,14 @@ pub trait Colorize {
     /// The following `#` prefix is optional.
     ///
     /// This function will return `None` if the hex string is invalid
-    fn try_on_hexcolor<S>(self, hex: S) -> Option<ColoredString>
+    fn try_on_hexcolor<S>(self, hex: S) -> Option<ColoredString<'a>>
     where
         Self: Sized,
         S: AsRef<str>,
     {
         parse_hex(hex.as_ref()).map(|color| self.on_color(color))
     }
-    fn on_custom_color<T>(self, color: T) -> ColoredString
+    fn on_custom_color<T>(self, color: T) -> ColoredString<'a>
     where
         Self: Sized,
         T: Into<CustomColor>,
@@ -329,22 +329,22 @@ pub trait Colorize {
             b: color.b,
         })
     }
-    fn on_color<S: Into<Color>>(self, color: S) -> ColoredString;
+    fn on_color<S: Into<Color>>(self, color: S) -> ColoredString<'a>;
 
     // Styles
-    fn clear(self) -> ColoredString;
-    fn normal(self) -> ColoredString;
-    fn bold(self) -> ColoredString;
-    fn dimmed(self) -> ColoredString;
-    fn italic(self) -> ColoredString;
-    fn underline(self) -> ColoredString;
-    fn blink(self) -> ColoredString;
-    fn reversed(self) -> ColoredString;
-    fn hidden(self) -> ColoredString;
-    fn strikethrough(self) -> ColoredString;
+    fn clear(self) -> ColoredString<'a>;
+    fn normal(self) -> ColoredString<'a>;
+    fn bold(self) -> ColoredString<'a>;
+    fn dimmed(self) -> ColoredString<'a>;
+    fn italic(self) -> ColoredString<'a>;
+    fn underline(self) -> ColoredString<'a>;
+    fn blink(self) -> ColoredString<'a>;
+    fn reversed(self) -> ColoredString<'a>;
+    fn hidden(self) -> ColoredString<'a>;
+    fn strikethrough(self) -> ColoredString<'a>;
 }
 
-impl ColoredString {
+impl ColoredString<'_> {
     /// Clears foreground coloring on this `ColoredString`, meaning that it
     /// will be printed with the default terminal text color.
     pub fn clear_fgcolor(&mut self) {
@@ -452,20 +452,20 @@ impl ColoredString {
     }
 }
 
-impl Deref for ColoredString {
+impl Deref for ColoredString<'_> {
     type Target = str;
     fn deref(&self) -> &Self::Target {
         self.input.as_ref()
     }
 }
 
-impl DerefMut for ColoredString {
+impl DerefMut for ColoredString<'_> {
     fn deref_mut(&mut self) -> &mut <Self as Deref>::Target {
         self.input.to_mut()
     }
 }
 
-impl From<String> for ColoredString {
+impl From<String> for ColoredString<'_> {
     fn from(s: String) -> Self {
         Self {
             input: Cow::Owned(s),
@@ -474,7 +474,7 @@ impl From<String> for ColoredString {
     }
 }
 
-impl From<&String> for ColoredString {
+impl From<&String> for ColoredString<'_> {
     fn from(s: &String) -> Self {
         Self {
             input: Cow::Owned(s.clone()),
@@ -483,7 +483,7 @@ impl From<&String> for ColoredString {
     }
 }
 
-impl<'a> From<&'a str> for ColoredString {
+impl<'a> From<&'a str> for ColoredString<'a> {
     fn from(s: &'a str) -> Self {
         Self {
             input: Cow::Owned(s.to_owned()),
@@ -495,7 +495,7 @@ impl<'a> From<&'a str> for ColoredString {
 macro_rules! impl_coloredstring_style_methods {
     ($(($method:ident, $style:expr)),*) => {
         $(
-            fn $method(mut self) -> ColoredString {
+            fn $method(mut self) -> ColoredString<'a> {
                 self.style.add($style);
                 self
             }
@@ -503,23 +503,23 @@ macro_rules! impl_coloredstring_style_methods {
     }
 }
 
-impl Colorize for ColoredString {
-    fn color<S: Into<Color>>(mut self, color: S) -> ColoredString {
+impl<'a> Colorize<'a> for ColoredString<'a> {
+    fn color<S: Into<Color>>(mut self, color: S) -> ColoredString<'a> {
         self.fgcolor = Some(color.into());
         self
     }
-    fn on_color<S: Into<Color>>(mut self, color: S) -> ColoredString {
+    fn on_color<S: Into<Color>>(mut self, color: S) -> ColoredString<'a> {
         self.bgcolor = Some(color.into());
         self
     }
 
-    fn clear(self) -> ColoredString {
+    fn clear(self) -> ColoredString<'a> {
         Self {
             input: self.input,
             ..Self::default()
         }
     }
-    fn normal(self) -> ColoredString {
+    fn normal(self) -> ColoredString<'a> {
         self.clear()
     }
 
@@ -538,15 +538,15 @@ impl Colorize for ColoredString {
 macro_rules! impl_str_style_methods {
     ($(($method:ident)),*) => {
         $(
-            fn $method(self) -> ColoredString {
+            fn $method(self) -> ColoredString<'a> {
                 ColoredString::from(self).$method()
             }
         )*
     }
 }
 
-impl Colorize for &str {
-    fn color<S: Into<Color>>(self, color: S) -> ColoredString {
+impl<'a> Colorize<'a> for &'a str {
+    fn color<S: Into<Color>>(self, color: S) -> ColoredString<'a> {
         ColoredString {
             fgcolor: Some(color.into()),
             input: Cow::Owned(String::from(self)),
@@ -554,7 +554,7 @@ impl Colorize for &str {
         }
     }
 
-    fn on_color<S: Into<Color>>(self, color: S) -> ColoredString {
+    fn on_color<S: Into<Color>>(self, color: S) -> ColoredString<'a> {
         ColoredString {
             bgcolor: Some(color.into()),
             input: Cow::Owned(String::from(self)),
@@ -562,14 +562,14 @@ impl Colorize for &str {
         }
     }
 
-    fn clear(self) -> ColoredString {
+    fn clear(self) -> ColoredString<'a> {
         ColoredString {
             input: Cow::Owned(String::from(self)),
             style: style::CLEAR,
             ..ColoredString::default()
         }
     }
-    fn normal(self) -> ColoredString {
+    fn normal(self) -> ColoredString<'a> {
         self.clear()
     }
 
@@ -585,7 +585,7 @@ impl Colorize for &str {
     }
 }
 
-impl fmt::Display for ColoredString {
+impl fmt::Display for ColoredString<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if !Self::has_colors() || self.is_plain() {
             return write!(f, "{}", self.input);

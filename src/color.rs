@@ -48,9 +48,9 @@ pub enum Color {
 }
 
 #[allow(missing_docs)]
-impl Color {
+impl<'a> Color {
     #[must_use]
-    pub fn to_fg_str(&self) -> Cow<'static, str> {
+    pub fn to_fg_str(&self) -> Cow<'a, str> {
         match *self {
             Self::Black => "30".into(),
             Self::Red => "31".into(),
@@ -78,7 +78,7 @@ impl Color {
     }
 
     #[must_use]
-    pub fn to_bg_str(&self) -> Cow<'static, str> {
+    pub fn to_bg_str(&self) -> Cow<'a, str> {
         match *self {
             Self::Black => "40".into(),
             Self::Red => "41".into(),
