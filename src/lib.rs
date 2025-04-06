@@ -158,120 +158,59 @@ pub struct ColoredString {
     pub style: style::Style,
 }
 
+// Define macros to generate color methods
+macro_rules! impl_basic_fg_colors {
+        ($(($method:ident, $color:ident)),*) => {
+            $(
+                fn $method(self) -> ColoredString
+                where
+                    Self: Sized,
+                {
+                    self.color(Color::$color)
+                }
+            )*
+        }
+    }
+
+macro_rules! impl_basic_bg_colors {
+        ($(($method:ident, $color:ident)),*) => {
+            $(
+                fn $method(self) -> ColoredString
+                where
+                    Self: Sized,
+                {
+                    self.on_color(Color::$color)
+                }
+            )*
+        }
+    }
+
 /// The trait that enables something to be given color.
 ///
 /// You can use `colored` effectively simply by importing this trait
 /// and then using its methods on `String` and `&str`.
 #[allow(missing_docs)]
 pub trait Colorize {
-    // Font Colors
-    fn black(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.color(Color::Black)
-    }
-    fn red(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.color(Color::Red)
-    }
-    fn green(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.color(Color::Green)
-    }
-    fn yellow(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.color(Color::Yellow)
-    }
-    fn blue(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.color(Color::Blue)
-    }
-    fn magenta(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.color(Color::Magenta)
-    }
-    fn purple(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.color(Color::Magenta)
-    }
-    fn cyan(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.color(Color::Cyan)
-    }
-    fn white(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.color(Color::White)
-    }
-    fn bright_black(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.color(Color::BrightBlack)
-    }
-    fn bright_red(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.color(Color::BrightRed)
-    }
-    fn bright_green(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.color(Color::BrightGreen)
-    }
-    fn bright_yellow(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.color(Color::BrightYellow)
-    }
-    fn bright_blue(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.color(Color::BrightBlue)
-    }
-    fn bright_magenta(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.color(Color::BrightMagenta)
-    }
-    fn bright_purple(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.color(Color::BrightMagenta)
-    }
-    fn bright_cyan(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.color(Color::BrightCyan)
-    }
-    fn bright_white(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.color(Color::BrightWhite)
+    // Generate standard foreground colors
+    impl_basic_fg_colors! {
+        (black, Black),
+        (red, Red),
+        (green, Green),
+        (yellow, Yellow),
+        (blue, Blue),
+        (magenta, Magenta),
+        (purple, Magenta), // Alias for magenta
+        (cyan, Cyan),
+        (white, White),
+        (bright_black, BrightBlack),
+        (bright_red, BrightRed),
+        (bright_green, BrightGreen),
+        (bright_yellow, BrightYellow),
+        (bright_blue, BrightBlue),
+        (bright_magenta, BrightMagenta),
+        (bright_purple, BrightMagenta), // Alias for bright magenta
+        (bright_cyan, BrightCyan),
+        (bright_white, BrightWhite)
     }
     fn ansi256color(self, idx: u8) -> ColoredString
     where
@@ -321,114 +260,27 @@ pub trait Colorize {
         })
     }
     fn color<S: Into<Color>>(self, color: S) -> ColoredString;
-    // Background Colors
-    fn on_black(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.on_color(Color::Black)
-    }
-    fn on_red(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.on_color(Color::Red)
-    }
-    fn on_green(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.on_color(Color::Green)
-    }
-    fn on_yellow(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.on_color(Color::Yellow)
-    }
-    fn on_blue(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.on_color(Color::Blue)
-    }
-    fn on_magenta(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.on_color(Color::Magenta)
-    }
-    fn on_purple(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.on_color(Color::Magenta)
-    }
-    fn on_cyan(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.on_color(Color::Cyan)
-    }
-    fn on_white(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.on_color(Color::White)
-    }
-    fn on_bright_black(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.on_color(Color::BrightBlack)
-    }
-    fn on_bright_red(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.on_color(Color::BrightRed)
-    }
-    fn on_bright_green(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.on_color(Color::BrightGreen)
-    }
-    fn on_bright_yellow(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.on_color(Color::BrightYellow)
-    }
-    fn on_bright_blue(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.on_color(Color::BrightBlue)
-    }
-    fn on_bright_magenta(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.on_color(Color::BrightMagenta)
-    }
-    fn on_bright_purple(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.on_color(Color::BrightMagenta)
-    }
-    fn on_bright_cyan(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.on_color(Color::BrightCyan)
-    }
-    fn on_bright_white(self) -> ColoredString
-    where
-        Self: Sized,
-    {
-        self.on_color(Color::BrightWhite)
+
+    // Generate background colors
+    impl_basic_bg_colors! {
+        (on_black, Black),
+        (on_red, Red),
+        (on_green, Green),
+        (on_yellow, Yellow),
+        (on_blue, Blue),
+        (on_magenta, Magenta),
+        (on_purple, Magenta), // Alias for magenta
+        (on_cyan, Cyan),
+        (on_white, White),
+        (on_bright_black, BrightBlack),
+        (on_bright_red, BrightRed),
+        (on_bright_green, BrightGreen),
+        (on_bright_yellow, BrightYellow),
+        (on_bright_blue, BrightBlue),
+        (on_bright_magenta, BrightMagenta),
+        (on_bright_purple, BrightMagenta), // Alias for bright magenta
+        (on_bright_cyan, BrightCyan),
+        (on_bright_white, BrightWhite)
     }
     fn on_ansi256color(self, idx: u8) -> ColoredString
     where
@@ -478,6 +330,7 @@ pub trait Colorize {
         })
     }
     fn on_color<S: Into<Color>>(self, color: S) -> ColoredString;
+
     // Styles
     fn clear(self) -> ColoredString;
     fn normal(self) -> ColoredString;
@@ -621,12 +474,32 @@ impl From<String> for ColoredString {
     }
 }
 
+impl From<&String> for ColoredString {
+    fn from(s: &String) -> Self {
+        Self {
+            input: Cow::Owned(s.clone()),
+            ..Self::default()
+        }
+    }
+}
+
 impl<'a> From<&'a str> for ColoredString {
     fn from(s: &'a str) -> Self {
         Self {
-            input: Cow::Owned(String::from(s)),
+            input: Cow::Owned(s.to_owned()),
             ..Self::default()
         }
+    }
+}
+
+macro_rules! impl_coloredstring_style_methods {
+    ($(($method:ident, $style:expr)),*) => {
+        $(
+            fn $method(mut self) -> ColoredString {
+                self.style.add($style);
+                self
+            }
+        )*
     }
 }
 
@@ -649,37 +522,26 @@ impl Colorize for ColoredString {
     fn normal(self) -> ColoredString {
         self.clear()
     }
-    fn bold(mut self) -> ColoredString {
-        self.style.add(style::Styles::Bold);
-        self
+
+    impl_coloredstring_style_methods! {
+        (bold, style::Styles::Bold),
+        (dimmed, style::Styles::Dimmed),
+        (italic, style::Styles::Italic),
+        (underline, style::Styles::Underline),
+        (blink, style::Styles::Blink),
+        (reversed, style::Styles::Reversed),
+        (hidden, style::Styles::Hidden),
+        (strikethrough, style::Styles::Strikethrough)
     }
-    fn dimmed(mut self) -> ColoredString {
-        self.style.add(style::Styles::Dimmed);
-        self
-    }
-    fn italic(mut self) -> ColoredString {
-        self.style.add(style::Styles::Italic);
-        self
-    }
-    fn underline(mut self) -> ColoredString {
-        self.style.add(style::Styles::Underline);
-        self
-    }
-    fn blink(mut self) -> ColoredString {
-        self.style.add(style::Styles::Blink);
-        self
-    }
-    fn reversed(mut self) -> ColoredString {
-        self.style.add(style::Styles::Reversed);
-        self
-    }
-    fn hidden(mut self) -> ColoredString {
-        self.style.add(style::Styles::Hidden);
-        self
-    }
-    fn strikethrough(mut self) -> ColoredString {
-        self.style.add(style::Styles::Strikethrough);
-        self
+}
+
+macro_rules! impl_str_style_methods {
+    ($(($method:ident)),*) => {
+        $(
+            fn $method(self) -> ColoredString {
+                ColoredString::from(self).$method()
+            }
+        )*
     }
 }
 
@@ -710,29 +572,16 @@ impl Colorize for &str {
     fn normal(self) -> ColoredString {
         self.clear()
     }
-    fn bold(self) -> ColoredString {
-        ColoredString::from(self).bold()
-    }
-    fn dimmed(self) -> ColoredString {
-        ColoredString::from(self).dimmed()
-    }
-    fn italic(self) -> ColoredString {
-        ColoredString::from(self).italic()
-    }
-    fn underline(self) -> ColoredString {
-        ColoredString::from(self).underline()
-    }
-    fn blink(self) -> ColoredString {
-        ColoredString::from(self).blink()
-    }
-    fn reversed(self) -> ColoredString {
-        ColoredString::from(self).reversed()
-    }
-    fn hidden(self) -> ColoredString {
-        ColoredString::from(self).hidden()
-    }
-    fn strikethrough(self) -> ColoredString {
-        ColoredString::from(self).strikethrough()
+
+    impl_str_style_methods! {
+        (bold),
+        (dimmed),
+        (italic),
+        (underline),
+        (blink),
+        (reversed),
+        (hidden),
+        (strikethrough)
     }
 }
 
