@@ -427,34 +427,32 @@ impl ColoredString<'_> {
             return Cow::Borrowed(self.input.as_ref());
         }
 
-        // TODO: BoyScoutRule
         let reset = "\x1B[0m";
         let style = self.compute_style();
-        let matches: Vec<usize> = self
-            .input
-            .match_indices(reset)
-            .map(|(idx, _)| idx)
-            .collect();
+        let matches: Vec<_> = self.input.match_indices(reset).collect();
+
         if matches.is_empty() {
             return Cow::Borrowed(self.input.as_ref());
         }
 
-        let mut input = self.input.to_string();
-        input.reserve(matches.len() * style.len());
+        let additional_space = matches.len() * style.len();
+        let mut result =
+            String::with_capacity(self.input.len() + additional_space);
 
-        for (idx_in_matches, offset) in matches.into_iter().enumerate() {
-            // shift the offset to the end of the reset sequence and take in account
-            // the number of matches we have escaped (which shift the index to insert)
-            let mut offset =
-                offset + reset.len() + idx_in_matches * style.len();
+        let mut last_end = 0;
+        for (idx, _) in matches {
+            result.push_str(&self.input[last_end..idx]);
+            result.push_str(reset);
+            result.push_str(&style);
 
-            for cchar in style.chars() {
-                input.insert(offset, cchar);
-                offset += 1;
-            }
+            last_end = idx + reset.len();
         }
 
-        Cow::Owned(input)
+        if last_end < self.input.len() {
+            result.push_str(&self.input[last_end..]);
+        }
+
+        Cow::Owned(result)
     }
 }
 
@@ -471,29 +469,11 @@ impl DerefMut for ColoredString<'_> {
     }
 }
 
-impl From<String> for ColoredString<'_> {
-    fn from(s: String) -> Self {
-        Self {
-            input: Cow::Owned(s),
-            ..Self::default()
-        }
-    }
-}
-
-impl From<&String> for ColoredString<'_> {
-    fn from(s: &String) -> Self {
-        Self {
-            input: Cow::Owned(s.clone()),
-            ..Self::default()
-        }
-    }
-}
-
-impl<'a> From<&'a str> for ColoredString<'a> {
-    fn from(s: &'a str) -> Self {
-        Self {
-            input: Cow::Owned(s.to_owned()),
-            ..Self::default()
+impl<'a, T: Into<Cow<'a, str>>> From<T> for ColoredString<'a> {
+    fn from(s: T) -> Self {
+        ColoredString {
+            input: s.into(),
+            ..ColoredString::default()
         }
     }
 }
@@ -597,7 +577,6 @@ impl fmt::Display for ColoredString<'_> {
             return write!(f, "{}", self.input);
         }
 
-        // XXX: see tests. Useful when nesting colored strings
         let escaped_input = self.escape_inner_reset_sequences();
 
         f.write_str(&self.compute_style())?;
