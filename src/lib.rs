@@ -1,69 +1,66 @@
 //! # Colored Next (CNXT)
-//! [![badge](https://api.lance.fun/badge/cratesio/cnxt)](https://crates.io/crates/cnxt)
-//!
-//! A fork of [colored](https://github.com/colored-rs/colored) which introduces better functionalities.
-//!
+//! [![crates.io](https://api.lance.fun/badge/cratesio/cnxt)](https://crates.io/crates/cnxt)
+//! 
+//! An enhanced fork of [colored](https://github.com/colored-rs/colored) offering superior performance and terminal handling.
+//! 
 //! Why CNXT?
-//!
-//! 1. **Enhanced Performance**: Uses `Cow` to minimize allocations [(Inspired by this PR)](https://github.com/colored-rs/colored/pull/135)
-//! 2. **Streamlined Codebase**: Removed outdated and redundant code
-//! 3. **Superior Terminal Support**: Improved detection and handling of terminal capabilities
-//!
+//! 
+//! 1. **Optimized Performance**: Utilizes `Cow` for intelligent memory management [(Inspired by PR#135)](https://github.com/colored-rs/colored/pull/135)
+//! 2. **Modern Codebase**: Removed legacy code and streamlined implementation
+//! 3. **Advanced Terminal Support**: Sophisticated terminal capability detection with automatic color downgrading
+//! 
 //! ## Usage
 //! Coloring your terminal made simple. You already know how to do it.
-//!
-//! ![usage](https://github.com/cnlancehu/cnxt/blob/master/assets/usage.png?raw=true)
-//!
-//! Small tips
-//!
+//! 
+//! ![usage](./assets/usage.png)
+//! 
+//! ### Essential Configuration
+//! 
 //! 1. For **Windows targets**, add this to enable colors in **Windows CMD**:
 //!     ```rust
 //!     #[cfg(windows)]
 //!     cnxt::control::set_virtual_terminal(true);
 //!     ```
-//!     
-//!     Comparison of colors with virtual terminal disabled vs enabled.
-//!
-//!     ![comparison](https://github.com/cnlancehu/cnxt/blob/master/assets/set_virtual_terminal_comparison.png?raw=true)
-//!
-//! 2. CNXT automatically detects **terminal color support** across **3 levels**:
-//!
-//!     - `Ansi16`
-//!     - `Ansi256`
+//! 
+//!     Comparison showing how Windows CMD displays colors before and after enabling virtual terminal.
+//! 
+//!     ![comparison](./assets/set_virtual_terminal_comparison.png)
+//! 
+//! 2. CNXT dynamically detects terminal color support across three tiers:
+//!     - `Ansi16` (16 colors)
+//!     - `Ansi256` (256 colors)
 //!     - `TrueColor`
 //!      
-//!     When using colors beyond your terminal's capabilities, CNXT automatically downgrades them to the maximum supported level.
+//!     When using colors beyond your terminal's capabilities, CNXT automatically **downgrades** them to the maximum supported level.
+//! 
+//!     Manual control options:
 //!     ```rust
 //!     use cnxt::control::{set_should_colorize, ShouldColorize};
-//!
-//!     // By default, the support level is detected from environment
-//!     ShouldColorize::from_env()
-//!
-//!     // You can explicitly set the support level:
-//!     set_should_colorize(ShouldColorize::YesWithTrueColor);  // Enable colorization with true color support
-//!     set_should_colorize(ShouldColorize::YesWithAnsi256);    // Enable colorization with 256 color support
-//!
-//!     // Simple on/off control:
-//!     set_should_colorize(ShouldColorize::No);    // Disable colorization
-//!     set_should_colorize(ShouldColorize::Yes);   // Enable colorization
-//!
-//!     // Reset to environment-based detection:
-//!     set_should_colorize(ShouldColorize::from_env());
-//!     ```
-//!     And for manual color fallback control:
-//!
-//!     ```rust
-//!     use cnxt::Color;
 //!     
-//!     let color = Color::TrueColor {
-//!         r: 166,
-//!         g: 227,
-//!         b: 161,
-//!     };
-//!     let ansi16_color = color.fallback_to_ansi16();
-//!     # or
-//!     let ansi256_color = color.fallback_to_ansi256();
+//!     // Environment-based detection level (default)
+//!     set_should_colorize(ShouldColorize::from_env());
+//! 
+//!     // Explicit configuration
+//!     set_should_colorize(ShouldColorize::YesWithTrueColor);  // Force truecolor
+//!     set_should_colorize(ShouldColorize::YesWithAnsi256);    // Force 256-color
+//!     set_should_colorize(ShouldColorize::No);                // Disable colors
+//!     set_should_colorize(ShouldColorize::Yes);               // Enable colors with auto-detect level
+//! 
+//!     // Manual color fallback
+//!     use cnxt::Color;
+//!     let truecolor = Color::TrueColor { r: 166, g: 227, b: 161 };
+//!     let ansi16 = truecolor.fallback_to_ansi16();
+//!     let ansi256 = truecolor.fallback_to_ansi256();
 //!     ```
+//! 
+//! 3. **Optional Terminal Detection**: By default, CNXT automatically detects terminal capabilities, but you can disable this feature:
+//! 
+//!     ```toml
+//!     [dependencies]
+//!     cnxt = { version = "0", default-features = false }
+//!     ```
+//! 
+//!     This will enable TrueColor support without terminal capability detection.
 
 mod color;
 pub mod control;

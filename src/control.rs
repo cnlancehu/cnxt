@@ -47,13 +47,25 @@ pub static COLOR_LEVEL_DETECTED: LazyLock<ColorLevel> =
     LazyLock::new(ColorLevel::detect);
 
 /// The global setting for whether and how to colorize output.
+/// 
+/// When the default feature `terminal-detection` is disabled, this defaults to `YesWithTrueColor`.
 ///
 /// This atomic value stores the current colorization setting as specified by
 /// [`ShouldColorize`]. It's initialized from the environment using
 /// [`ShouldColorize::from_env()`] but can be changed at runtime with
 /// [`set_should_colorize()`].
-pub static SHOULD_COLORIZE: LazyLock<AtomicU8> =
-    LazyLock::new(|| AtomicU8::new(ShouldColorize::from_env() as u8));
+pub static SHOULD_COLORIZE: LazyLock<AtomicU8> = LazyLock::new(|| {
+    AtomicU8::new(
+        #[cfg(feature = "terminal-detection")]
+        {
+            ShouldColorize::from_env() as u8
+        },
+        #[cfg(not(feature = "terminal-detection"))]
+        {
+            ShouldColorize::YesWithTrueColor as u8
+        },
+    )
+});
 
 /// Sets a flag to the console to use a virtual terminal environment.
 ///
