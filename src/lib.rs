@@ -12,7 +12,7 @@
 //! ## Usage
 //! Coloring your terminal made simple. You already know how to do it.
 //! 
-//! ![usage](./assets/usage.png)
+//! ![usage](https://raw.githubusercontent.com/cnlancehu/cnxt/refs/heads/master/assets/usage.png)
 //! 
 //! ### Essential Configuration
 //! 
@@ -24,7 +24,7 @@
 //! 
 //!     Comparison showing how Windows CMD displays colors before and after enabling virtual terminal.
 //! 
-//!     ![comparison](./assets/set_virtual_terminal_comparison.png)
+//!     ![comparison](https://raw.githubusercontent.com/cnlancehu/cnxt/refs/heads/master/assets/set_virtual_terminal_comparison.png)
 //! 
 //! 2. CNXT dynamically detects terminal color support across three tiers:
 //!     - `Ansi16` (16 colors)
