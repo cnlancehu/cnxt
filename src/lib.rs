@@ -428,12 +428,12 @@ impl ColoredString<'_> {
         }
 
         let reset = "\x1B[0m";
-        let style = self.compute_style();
-        let matches: Vec<_> = self.input.match_indices(reset).collect();
-
-        if matches.is_empty() {
+        if !self.input.contains(reset) {
             return Cow::Borrowed(self.input.as_ref());
         }
+
+        let style = self.compute_style();
+        let matches: Vec<_> = self.input.match_indices(reset).collect();
 
         let additional_space = matches.len() * style.len();
         let mut result =
