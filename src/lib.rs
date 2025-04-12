@@ -532,7 +532,7 @@ impl<'a> Colorize<'a> for &'a str {
     fn color<S: Into<Color>>(self, color: S) -> ColoredString<'a> {
         ColoredString {
             fgcolor: Some(color.into()),
-            input: Cow::Owned(String::from(self)),
+            input: Cow::Borrowed(self),
             ..ColoredString::default()
         }
     }
@@ -540,14 +540,14 @@ impl<'a> Colorize<'a> for &'a str {
     fn on_color<S: Into<Color>>(self, color: S) -> ColoredString<'a> {
         ColoredString {
             bgcolor: Some(color.into()),
-            input: Cow::Owned(String::from(self)),
+            input: Cow::Borrowed(self),
             ..ColoredString::default()
         }
     }
 
     fn clear(self) -> ColoredString<'a> {
         ColoredString {
-            input: Cow::Owned(String::from(self)),
+            input: Cow::Borrowed(self),
             style: style::CLEAR,
             ..ColoredString::default()
         }
