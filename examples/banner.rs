@@ -19,7 +19,7 @@ fn main() {
 fn img2lines(buffer: &[u8]) -> Result<Vec<String>> {
     let mut image = load_from_memory(buffer)?;
     let (width, height) = image.dimensions();
-    let termsize = size().unwrap();
+    let termsize = size()?;
 
     // Calculate zoom factor based on terminal size
     // Each character takes 2 rows of pixels due to the half-block approach

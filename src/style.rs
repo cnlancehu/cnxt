@@ -290,15 +290,6 @@ impl Not for &Styles {
 }
 
 impl Style {
-    /// Checks if this Style has a specific style flag enabled.
-    ///
-    /// ### Example
-    ///
-    /// ```rust
-    /// let style = Style::default().bold().italic();
-    /// assert!(style.contains(Styles::Bold));
-    /// assert!(!style.contains(Styles::Underline));
-    /// ```
     #[must_use]
     #[inline]
     pub fn contains(self, style: Styles) -> bool {
@@ -318,30 +309,11 @@ impl Style {
         }
     }
 
-    /// Adds a style flag to this Style.
-    ///
-    /// ### Example
-    ///
-    /// ```rust
-    /// let mut style = Style::default();
-    /// style.add(Styles::Bold);
-    /// assert!(style.contains(Styles::Bold));
-    /// ```
     #[inline]
     pub fn add(&mut self, style: Styles) {
         self.0 |= style.to_u8();
     }
 
-    /// Removes a style flag from this Style.
-    ///
-    /// ### Example
-    ///
-    /// ```rust
-    /// let mut style = Style::default().bold().italic();
-    /// style.remove(Styles::Bold);
-    /// assert!(!style.contains(Styles::Bold));
-    /// assert!(style.contains(Styles::Italic));
-    /// ```
     #[inline]
     pub fn remove(&mut self, style: Styles) {
         self.0 &= !style.to_u8();

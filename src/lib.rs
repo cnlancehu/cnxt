@@ -98,7 +98,7 @@ pub use style::{Style, Styles};
 /// console with their colors and style or turned into a string
 /// containing special console codes that has the same effect.
 /// This is made easy via `ColoredString`'s implementations of
-/// [`Display`](std::fmt::Display) and [`ToString`] for those purposes
+/// [`Display`](fmt::Display) and [`ToString`] for those purposes
 /// respectively.
 ///
 /// Printing a `ColoredString` with its style is as easy as:
@@ -138,7 +138,7 @@ pub use style::{Style, Styles};
 /// # use cnxt::*;
 /// let mut colored_text = "Magenta".magenta();
 /// colored_text = colored_text.blue();
-/// colored_text.input = "Blue".to_string();
+/// colored_text.input = "Blue".into();
 /// // Note: The above is inefficient and `colored_text.input.replace_range(.., "Blue")` would
 /// // be more proper. This is just for example.
 ///
@@ -158,7 +158,7 @@ pub struct ColoredString<'a> {
     pub bgcolor: Option<Color>,
     /// Any special styling to be applied to the text (see Styles for a list of
     /// available options).
-    pub style: style::Style,
+    pub style: Style,
 }
 
 // Define macros to generate color methods
@@ -507,14 +507,14 @@ impl<'a> Colorize<'a> for ColoredString<'a> {
     }
 
     impl_coloredstring_style_methods! {
-        (bold, style::Styles::Bold),
-        (dimmed, style::Styles::Dimmed),
-        (italic, style::Styles::Italic),
-        (underline, style::Styles::Underline),
-        (blink, style::Styles::Blink),
-        (reversed, style::Styles::Reversed),
-        (hidden, style::Styles::Hidden),
-        (strikethrough, style::Styles::Strikethrough)
+        (bold, Styles::Bold),
+        (dimmed, Styles::Dimmed),
+        (italic, Styles::Italic),
+        (underline, Styles::Underline),
+        (blink, Styles::Blink),
+        (reversed, Styles::Reversed),
+        (hidden, Styles::Hidden),
+        (strikethrough, Styles::Strikethrough)
     }
 }
 

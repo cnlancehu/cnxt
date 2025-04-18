@@ -1,20 +1,24 @@
-<div align="center">
+<div style="text-align: center;">
     <img src="./assets/banner-cli.gif" alt="banner">
     <p>Run <code>cargo run --example banner -r</code> to print the Banner!</p>
 </div>
 
 # Colored Next (CNXT)
+
 [![crates.io](https://api.lance.fun/badge/cratesio/cnxt)](https://crates.io/crates/cnxt)
 
-An enhanced fork of [colored](https://github.com/colored-rs/colored) offering superior performance and terminal handling.
+An enhanced fork of [colored](https://github.com/colored-rs/colored) offering superior performance and terminal
+handling.
 
 Why CNXT?
 
-1. **Optimized Performance**: Utilizes `Cow` for intelligent memory management [(Inspired by PR#135)](https://github.com/colored-rs/colored/pull/135)
+1. **Optimized Performance**: Utilizes `Cow` for intelligent memory
+   management [(Inspired by PR#135)](https://github.com/colored-rs/colored/pull/135)
 2. **Modern Codebase**: Removed legacy code and streamlined implementation
 3. **Advanced Terminal Support**: Sophisticated terminal capability detection with automatic color downgrading
 
 ## Usage
+
 Coloring your terminal made simple. You already know how to do it.
 
 ![usage](./assets/usage.png)
@@ -27,18 +31,19 @@ Coloring your terminal made simple. You already know how to do it.
     cnxt::control::set_virtual_terminal(true);
     ```
 
-    Comparison showing how Windows CMD displays colors before and after enabling virtual terminal.
+   Comparison showing how Windows CMD displays colors before and after enabling virtual terminal.
 
-    ![comparison](./assets/set_virtual_terminal_comparison.png)
+   ![comparison](./assets/set_virtual_terminal_comparison.png)
 
 2. CNXT dynamically detects terminal color support across three tiers:
     - `Ansi16` (16 colors)
     - `Ansi256` (256 colors)
     - `TrueColor`
-     
-    When using colors beyond your terminal's capabilities, CNXT automatically **downgrades** them to the maximum supported level.
 
-    Manual control options:
+   When using colors beyond your terminal's capabilities, CNXT automatically **downgrades** them to the maximum
+   supported level.
+
+   Manual control options:
     ```rust
     use cnxt::control::{set_should_colorize, ShouldColorize};
     
@@ -58,14 +63,17 @@ Coloring your terminal made simple. You already know how to do it.
     let ansi256 = truecolor.fallback_to_ansi256();
     ```
 
-3. **Optional Terminal Detection**: By default, CNXT automatically detects terminal capabilities, but you can disable this feature:
+3. **Optional Terminal Detection**: By default, CNXT automatically detects terminal capabilities, but you can disable
+   this feature:
 
     ```toml
     [dependencies]
     cnxt = { version = "0", default-features = false }
     ```
 
-    This will enable TrueColor support without terminal capability detection.
+   This will enable TrueColor support without terminal capability detection.
 
 ## License
-CNXT maintains the original [MPL-2.0 License](https://www.mozilla.org/en-US/MPL/2.0/) from the [colored](https://github.com/colored-rs/colored) project.
+
+CNXT maintains the original [MPL-2.0 License](https://www.mozilla.org/en-US/MPL/2.0/) from
+the [colored](https://github.com/colored-rs/colored) project.
