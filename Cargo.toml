@@ -29,6 +29,7 @@ image = "0"
 [features]
 default = ["terminal-detection"]
 terminal-detection = []
+conditional-coloring = []
 
 [[example]]
 name = "banner"

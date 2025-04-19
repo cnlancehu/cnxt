@@ -1,66 +1,77 @@
 //! # Colored Next (CNXT)
 //! [![crates.io](https://api.lance.fun/badge/cratesio/cnxt)](https://crates.io/crates/cnxt)
-//! 
+//!
 //! An enhanced fork of [colored](https://github.com/colored-rs/colored) offering superior performance and terminal handling.
-//! 
+//!
 //! Why CNXT?
-//! 
-//! 1. **Optimized Performance**: Utilizes `Cow` for intelligent memory management [(Inspired by PR#135)](https://github.com/colored-rs/colored/pull/135)
+//!
+//! 1. **Optimized Performance**: Utilizes `Cow` for intelligent memory management [(Inspired by this PR)](https://github.com/colored-rs/colored/pull/135)
 //! 2. **Modern Codebase**: Removed legacy code and streamlined implementation
 //! 3. **Advanced Terminal Support**: Sophisticated terminal capability detection with automatic color downgrading
-//! 
+//!
 //! ## Usage
 //! Coloring your terminal made simple. You already know how to do it.
-//! 
+//!
 //! ![usage](https://raw.githubusercontent.com/cnlancehu/cnxt/refs/heads/master/assets/usage.png)
-//! 
+//!
 //! ### Essential Configuration
-//! 
+//!
 //! 1. For **Windows targets**, add this to enable colors in **Windows CMD**:
 //!     ```rust
 //!     #[cfg(windows)]
 //!     cnxt::control::set_virtual_terminal(true);
 //!     ```
-//! 
+//!
 //!     Comparison showing how Windows CMD displays colors before and after enabling virtual terminal.
-//! 
+//!
 //!     ![comparison](https://raw.githubusercontent.com/cnlancehu/cnxt/refs/heads/master/assets/set_virtual_terminal_comparison.png)
-//! 
+//!
 //! 2. CNXT dynamically detects terminal color support across three tiers:
 //!     - `Ansi16` (16 colors)
 //!     - `Ansi256` (256 colors)
 //!     - `TrueColor`
 //!      
 //!     When using colors beyond your terminal's capabilities, CNXT automatically **downgrades** them to the maximum supported level.
-//! 
+//!
 //!     Manual control options:
 //!     ```rust
 //!     use cnxt::control::{set_should_colorize, ShouldColorize};
 //!     
 //!     // Environment-based detection level (default)
 //!     set_should_colorize(ShouldColorize::from_env());
-//! 
+//!
 //!     // Explicit configuration
 //!     set_should_colorize(ShouldColorize::YesWithTrueColor);  // Force truecolor
 //!     set_should_colorize(ShouldColorize::YesWithAnsi256);    // Force 256-color
 //!     set_should_colorize(ShouldColorize::No);                // Disable colors
 //!     set_should_colorize(ShouldColorize::Yes);               // Enable colors with auto-detect level
-//! 
+//!
 //!     // Manual color fallback
 //!     use cnxt::Color;
+//!
 //!     let truecolor = Color::TrueColor { r: 166, g: 227, b: 161 };
 //!     let ansi16 = truecolor.fallback_to_ansi16();
 //!     let ansi256 = truecolor.fallback_to_ansi256();
 //!     ```
-//! 
-//! 3. **Optional Terminal Detection**: By default, CNXT automatically detects terminal capabilities, but you can disable this feature:
-//! 
-//!     ```toml
-//!     [dependencies]
-//!     cnxt = { version = "0", default-features = false }
+//!
+//! ### Features
+//! 1. **terminal-detection** (Enabled by default):
+//!
+//!     Automatically detects terminal color support and downgrades colors accordingly.
+//!
+//!     Defaultly use TrueColor if disable this feature.
+//!
+//! 2. **conditional-coloring** :
+//!    Provide helper functions to colorize strings based on conditions.
+//!
+//!     ```rust
+//!     use cnxt::Colorize as _;
+//!     
+//!     println!("{}", "red".red_if(true)); // print red color
+//!     println!("{}", "red".red_if(false)); // print no color
+//!
+//!     println!("{}", "green".green().red_if(false)); // print green color
 //!     ```
-//! 
-//!     This will enable TrueColor support without terminal capability detection.
 
 mod color;
 pub mod control;
@@ -175,6 +186,27 @@ macro_rules! impl_basic_fg_colors {
         }
     }
 
+#[cfg(feature = "conditional-coloring")]
+macro_rules! impl_basic_fg_colors_conditional {
+        ($(($method:ident, $color:ident)),*) => {
+            $(
+                /// If `cond` is true, color the string with the specified color.
+                ///
+                /// Otherwise, return the string unchanged.
+                fn $method(self, cond: bool) -> ColoredString<'a>
+                where
+                    Self: Sized,
+                {
+                    if cond {
+                        self.color(Color::$color)
+                    } else {
+                        self.do_nothing()
+                    }
+                }
+            )*
+        }
+    }
+
 macro_rules! impl_basic_bg_colors {
         ($(($method:ident, $color:ident)),*) => {
             $(
@@ -188,12 +220,41 @@ macro_rules! impl_basic_bg_colors {
         }
     }
 
+#[cfg(feature = "conditional-coloring")]
+macro_rules! impl_basic_bg_colors_conditional {
+        ($(($method:ident, $color:ident)),*) => {
+            $(
+                /// If `cond` is true, color the string with the specified background color.
+                ///
+                /// Otherwise, return the string unchanged.
+                fn $method(self, cond: bool) -> ColoredString<'a>
+                where
+                    Self: Sized,
+                {
+                    if cond {
+                        self.on_color(Color::$color)
+                    } else {
+                        self.do_nothing()
+                    }
+                }
+            )*
+        }
+    }
+
 /// The trait that enables something to be given color.
 ///
 /// You can use `colored` effectively simply by importing this trait
 /// and then using its methods on `String` and `&str`.
 #[allow(missing_docs)]
 pub trait Colorize<'a> {
+    #[cfg(feature = "conditional-coloring")]
+    fn do_nothing(self) -> ColoredString<'a>
+    where
+        Self: Sized,
+    {
+        self.do_nothing()
+    }
+
     // Generate standard foreground colors
     impl_basic_fg_colors! {
         (black, Black),
@@ -215,6 +276,29 @@ pub trait Colorize<'a> {
         (bright_cyan, BrightCyan),
         (bright_white, BrightWhite)
     }
+
+    #[cfg(feature = "conditional-coloring")]
+    impl_basic_fg_colors_conditional! {
+        (black_if, Black),
+        (red_if, Red),
+        (green_if, Green),
+        (yellow_if, Yellow),
+        (blue_if, Blue),
+        (magenta_if, Magenta),
+        (purple_if, Magenta), // Alias for magenta
+        (cyan_if, Cyan),
+        (white_if, White),
+        (bright_black_if, BrightBlack),
+        (bright_red_if, BrightRed),
+        (bright_green_if, BrightGreen),
+        (bright_yellow_if, BrightYellow),
+        (bright_blue_if, BrightBlue),
+        (bright_magenta_if, BrightMagenta),
+        (bright_purple_if, BrightMagenta), // Alias for bright magenta
+        (bright_cyan_if, BrightCyan),
+        (bright_white_if, BrightWhite)
+    }
+
     fn ansi256color(self, idx: u8) -> ColoredString<'a>
     where
         Self: Sized,
@@ -285,6 +369,29 @@ pub trait Colorize<'a> {
         (on_bright_cyan, BrightCyan),
         (on_bright_white, BrightWhite)
     }
+
+    #[cfg(feature = "conditional-coloring")]
+    impl_basic_bg_colors_conditional! {
+        (on_black_if, Black),
+        (on_red_if, Red),
+        (on_green_if, Green),
+        (on_yellow_if, Yellow),
+        (on_blue_if, Blue),
+        (on_magenta_if, Magenta),
+        (on_purple_if, Magenta), // Alias for magenta
+        (on_cyan_if, Cyan),
+        (on_white_if, White),
+        (on_bright_black_if, BrightBlack),
+        (on_bright_red_if, BrightRed),
+        (on_bright_green_if, BrightGreen),
+        (on_bright_yellow_if, BrightYellow),
+        (on_bright_blue_if, BrightBlue),
+        (on_bright_magenta_if, BrightMagenta),
+        (on_bright_purple_if, BrightMagenta), // Alias for bright magenta
+        (on_bright_cyan_if, BrightCyan),
+        (on_bright_white_if, BrightWhite)
+    }
+
     fn on_ansi256color(self, idx: u8) -> ColoredString<'a>
     where
         Self: Sized,
@@ -487,6 +594,11 @@ macro_rules! impl_coloredstring_style_methods {
 }
 
 impl<'a> Colorize<'a> for ColoredString<'a> {
+    #[cfg(feature = "conditional-coloring")]
+    fn do_nothing(self) -> ColoredString<'a> {
+        self
+    }
+
     fn color<S: Into<Color>>(mut self, color: S) -> ColoredString<'a> {
         self.fgcolor = Some(color.into());
         self
@@ -529,6 +641,11 @@ macro_rules! impl_str_style_methods {
 }
 
 impl<'a> Colorize<'a> for &'a str {
+    #[cfg(feature = "conditional-coloring")]
+    fn do_nothing(self) -> ColoredString<'a> {
+        ColoredString::from(self)
+    }
+
     fn color<S: Into<Color>>(self, color: S) -> ColoredString<'a> {
         ColoredString {
             fgcolor: Some(color.into()),

@@ -47,7 +47,7 @@ pub static COLOR_LEVEL_DETECTED: LazyLock<ColorLevel> =
     LazyLock::new(ColorLevel::detect);
 
 /// The global setting for whether and how to colorize output.
-/// 
+///
 /// When the default feature `terminal-detection` is disabled, this defaults to `YesWithTrueColor`.
 ///
 /// This atomic value stores the current colorization setting as specified by

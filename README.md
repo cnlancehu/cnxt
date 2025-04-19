@@ -1,4 +1,4 @@
-<div style="text-align: center;">
+<div style="align: center;">
     <img src="./assets/banner-cli.gif" alt="banner">
     <p>Run <code>cargo run --example banner -r</code> to print the Banner!</p>
 </div>
@@ -13,7 +13,7 @@ handling.
 Why CNXT?
 
 1. **Optimized Performance**: Utilizes `Cow` for intelligent memory
-   management [(Inspired by PR#135)](https://github.com/colored-rs/colored/pull/135)
+   management [(Inspired by this PR)](https://github.com/colored-rs/colored/pull/135)
 2. **Modern Codebase**: Removed legacy code and streamlined implementation
 3. **Advanced Terminal Support**: Sophisticated terminal capability detection with automatic color downgrading
 
@@ -40,10 +40,10 @@ Coloring your terminal made simple. You already know how to do it.
     - `Ansi256` (256 colors)
     - `TrueColor`
 
-   When using colors beyond your terminal's capabilities, CNXT automatically **downgrades** them to the maximum
-   supported level.
+    When using colors beyond your terminal's capabilities, CNXT automatically **downgrades** them to the maximum
+    supported level.
 
-   Manual control options:
+    Manual control options:
     ```rust
     use cnxt::control::{set_should_colorize, ShouldColorize};
     
@@ -58,20 +58,30 @@ Coloring your terminal made simple. You already know how to do it.
 
     // Manual color fallback
     use cnxt::Color;
+
     let truecolor = Color::TrueColor { r: 166, g: 227, b: 161 };
     let ansi16 = truecolor.fallback_to_ansi16();
     let ansi256 = truecolor.fallback_to_ansi256();
     ```
 
-3. **Optional Terminal Detection**: By default, CNXT automatically detects terminal capabilities, but you can disable
-   this feature:
+### Features
+1. **terminal-detection** (Enabled by default): 
 
-    ```toml
-    [dependencies]
-    cnxt = { version = "0", default-features = false }
+    Automatically detects terminal color support and downgrades colors accordingly.
+
+    Defaultly use TrueColor if disable this feature.
+
+2. **conditional-coloring** :
+    Provide helper functions to colorize strings based on conditions.
+
+    ```rust
+    use cnxt::Colorize as _;
+    
+    println!("{}", "red".red_if(true)); // print red color
+    println!("{}", "red".red_if(false)); // print no color
+
+    println!("{}", "green".green().red_if(false)); // print green color
     ```
-
-   This will enable TrueColor support without terminal capability detection.
 
 ## License
 
